@@ -1,12 +1,11 @@
 plugins {
-    // 修复：去掉 version，只保留 ID
     id 'com.android.application'
 }
 
 android {
     namespace 'com.nexus.kernel.manager'
     compileSdk 34
-    
+
     defaultConfig {
         applicationId "com.nexus.kernel.manager"
         minSdk 26
@@ -16,23 +15,21 @@ android {
 
         externalNativeBuild {
             cmake {
-                path "src/main/cpp/CMakeLists.txt"
+                // 修复 1：这里只能写参数，不能写 path
+                cppFlags "-O3"
+                abiFilters "arm64-v8a"
             }
         }
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-        }
-    }
-    
+    // 修复 2：指定 CMakeLists.txt 路径的正确位置是在这里
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
         }
     }
-    
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
