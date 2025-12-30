@@ -1,16 +1,6 @@
+// 根目录脚本，负责定义全局插件版本
 plugins {
-    id 'com.android.application' // 只有这一行，不要写 version
-}
-
-android {
-    // ... 保持之前的配置不变 ...
-    namespace 'com.nexus.kernel.manager'
-    compileSdk 34
-    // ... 
-}
-
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'com.github.topjohnwu.libsu:core:5.2.2'
+    // 这里必须带版本号，作为整个项目的基准
+    id 'com.android.application' version '8.2.2' apply false
+    id 'com.android.library' version '8.2.2' apply false
 }
