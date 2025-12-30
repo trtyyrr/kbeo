@@ -3,8 +3,6 @@ name: Android Kernel Manager CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -22,25 +20,15 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      # 关键修复：安装 NDK 并配置环境
-      - name: Install NDK
-        run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;25.1.8937393"
-
-      # 关键修复：如果仓库没 gradlew，就地生成一个官方的
-      - name: Generate Gradle Wrapper
-        run: |
-          gradle wrapper --gradle-version 8.2
-          chmod +x gradlew
+      # 关键：不要在这里运行 gradle wrapper，直接赋予权限
+      - name: Grant Execute Permission
+        run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nexus-Kernel-Manager-Debug
+          name: Kernel-Manager-APK
           path: app/build/outputs/apk/debug/app-debug.apk
