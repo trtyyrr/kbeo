@@ -6,13 +6,14 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
+    // 核心：强制所有模块使用这里的仓库配置
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
-        // 添加下面这一行
         maven { url 'https://jitpack.io' }
     }
 }
+
 rootProject.name = "NexusKernelManager"
 include ':app'
