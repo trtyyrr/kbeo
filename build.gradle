@@ -5,9 +5,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // 确保使用支持 Java 17 的版本
+        // 在这里统一管理版本
         classpath 'com.android.tools.build:gradle:8.1.0'
     }
 }
 
-// 删掉了原本引起冲突的 allprojects { repositories { ... } }
+// 确保这里没有 allprojects 块，之前已经删过了
