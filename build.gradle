@@ -1,18 +1,13 @@
-// 官方标准根目录 build.gradle
+// 根目录 build.gradle
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        // 建议版本，匹配 Actions 中的 Gradle 8.2
+        // 确保使用支持 Java 17 的版本
         classpath 'com.android.tools.build:gradle:8.1.0'
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+// 删掉了原本引起冲突的 allprojects { repositories { ... } }
