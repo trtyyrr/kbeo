@@ -1,6 +1,6 @@
-// 根目录 build.gradle
+// 彻底精简后的根目录 build.gradle
 plugins {
-    // 适配 Gradle 9.2 的 Android 插件版本 (8.2.0+ 才能稳定支持)
-    id 'com.android.application' version '8.2.0' apply false
-    id 'com.android.library' version '8.2.0' apply false
+    // 适配 Gradle 9.2 的版本
+    id 'com.android.application' version '8.2.2' apply false
+    id 'com.android.library' version '8.2.2' apply false
 }
