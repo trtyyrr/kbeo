@@ -1,5 +1,6 @@
 plugins {
-    id 'com.android.application' version '8.1.0' apply true
+    // 修复：去掉 version，只保留 ID
+    id 'com.android.application'
 }
 
 android {
@@ -12,12 +13,34 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
-        
+
         externalNativeBuild {
             cmake {
-                cppFlags "-O3"
+                path "src/main/cpp/CMakeLists.txt"
             }
         }
     }
-    // ... 其余保持不变 ...
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.github.topjohnwu.libsu:core:5.2.2'
 }
