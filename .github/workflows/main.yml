@@ -1,4 +1,4 @@
-name: Android Kernel Manager CI
+name: Android Kernel Manager CI (Gradle 9.2)
 
 on:
   push:
@@ -18,36 +18,19 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # 1. 自动拉取官方 Gradlew 和 Wrapper JAR
-      - name: Fetch Official Gradle Wrapper
+      # 强制更新 Wrapper 到 9.2
+      - name: Update to Gradle 9.2
         run: |
-          # 彻底清除可能损坏的旧文件
-          rm -f gradlew
-          rm -rf gradle/wrapper
-          
-          # 使用系统内置 gradle 重新生成全套官方组件
-          gradle wrapper --gradle-version 8.1.1
-          
-          # 赋予执行权限
+          gradle wrapper --gradle-version 9.2
           chmod +x gradlew
 
-      # 2. 安装 NDK (用于编译你的 C++ 内核修补引擎)
       - name: Install NDK
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;25.1.8937393"
 
-      # 3. 执行编译
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
-
-      # 4. 上传生成的 APK
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel-Manager-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+        run: ./gradlew assembleDebug
