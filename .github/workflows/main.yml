@@ -1,4 +1,3 @@
-# 路径: /.github/workflows/android.yml
 name: Android CI
 
 on: [push, pull_request]
@@ -15,6 +14,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # 新增：确保 NDK 环境就绪（虽然自带，但显式声明更稳）
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c # 适配 AGP 8.7.3 的稳定版本
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -22,13 +27,17 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          # 强制生成 wrapper 文件防止报错
+          # 1. 补全 wrapper 文件
           gradle wrapper --gradle-version 9.2.1
           chmod +x gradlew
+          
+          # 2. 核心编译命令
+          # assembleDebug 会自动触发 CMake 编译 C++ 代码并打包进 APK
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nexus-Manager-Build
+          name: Nexus-Manager-CPP-Build
+          # 路径保持不变，Gradle 会自动把 .so 塞进这个 APK
           path: app/build/outputs/apk/debug/com.nexus.kernel.manager.apk
