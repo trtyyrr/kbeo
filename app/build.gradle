@@ -13,15 +13,15 @@ android {
         versionCode 1
         versionName "1.0"
 
+        // 指定只编译 64 位架构，适配一加平板 Pro
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++17"
                 abiFilters "arm64-v8a"
             }
         }
     }
 
-    // C++ 编译配置
+    // 关联 C++ 编译脚本
     externalNativeBuild {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
@@ -29,20 +29,19 @@ android {
         }
     }
 
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "com.nexus.kernel.manager.apk"
+    buildTypes {
+        release {
+            minifyEnabled false
         }
     }
-
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17
     }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
+    // 引入 Root 核心库
     implementation 'com.github.topjohnwu.libsu:core:5.2.2'
 }
