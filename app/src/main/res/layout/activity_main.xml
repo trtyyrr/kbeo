@@ -1,111 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#F5F7FA">
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:strokeWidth="0dp"
-        android:layout_marginBottom="16dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                android:id="@+id/txt_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="正在检查环境..."
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#333333" />
-
-            <TextView
-                android:id="@+id/txt_kernel_info"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="内核版本: 加载中..."
-                android:textSize="14sp"
-                android:textColor="#666666" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+    android:gravity="center"
+    android:padding="20dp">
 
     <TextView
+        android:id="@+id/txt_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="核心功能"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginStart="4dp"
-        android:layout_marginBottom="8dp"
-        android:textColor="#999999" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_modules"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:text="管理系统模块"
-        app:icon="@android:drawable/ic_menu_manage"
-        android:layout_marginBottom="12dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_patch_file"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:text="修补 Boot 镜像"
-        app:icon="@android:drawable/ic_menu_save"
-        android:layout_marginBottom="12dp" />
+        android:text="环境检测中..."
+        android:textSize="22sp"
+        android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/txt_kernel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="系统选项"
+        android:layout_marginTop="16dp"
+        android:text="内核版本: 待获取"
         android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:textColor="#999999" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_direct_install"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="重启到 Bootloader"
-        android:layout_marginBottom="12dp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_grant_root"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="手动获取 Root 授权" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Nexus Kernel Manager v1.0"
-        android:textSize="12sp"
-        android:textColor="#CCCCCC" />
+        android:textColor="#666666" />
 
 </LinearLayout>
