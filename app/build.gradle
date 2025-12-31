@@ -1,11 +1,42 @@
+// 必须有这一块，否则 Gradle 认不出 android { ... }
+plugins {
+    id 'com.android.application'
+}
+
 android {
     namespace 'com.nexus.kernel.manager'
     compileSdk 34
-    
+
     defaultConfig {
         applicationId "com.nexus.kernel.manager"
         minSdk 26
         targetSdk 34
-        // ... 其他保持不变
+        versionCode 1
+        versionName "1.0"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-O3"
+                abiFilters "arm64-v8a"
+            }
+        }
     }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.github.topjohnwu.libsu:core:5.2.2'
 }
