@@ -1,3 +1,4 @@
+# 路径: /.github/workflows/android.yml
 name: Android CI
 
 on: [push, pull_request]
@@ -21,7 +22,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          # 这一步非常关键：补全缺失的 jar 文件
+          # 强制生成 wrapper 文件防止报错
           gradle wrapper --gradle-version 9.2.1
           chmod +x gradlew
           ./gradlew assembleDebug
@@ -29,5 +30,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Kernel-Manager-Build
+          name: Nexus-Manager-Build
           path: app/build/outputs/apk/debug/com.nexus.kernel.manager.apk
