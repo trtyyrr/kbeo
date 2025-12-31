@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
+project("nexus-native-lib")
 
-project("nexus-kernel-lib")
+# 创建库文件
+add_library(nexus-native-lib SHARED native-lib.cpp)
 
-# 编译 C++ 代码为共享库 (.so)
-add_library(nexus-kernel-lib SHARED native-lib.cpp)
-
-# 链接 Android 系统的 Log 库，方便在底层调试
+# 链接安卓系统日志库
 find_library(log-lib log)
-target_link_libraries(nexus-kernel-lib ${log-lib})
+target_link_libraries(nexus-native-lib ${log-lib})
