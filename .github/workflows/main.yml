@@ -17,11 +17,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '9.2.1' # 已修正
+          gradle-version: '9.2.1'
 
       - name: Build with Gradle
-        # 使用 gradlew 之前先给权限
         run: |
+          # 这一步非常关键：补全缺失的 jar 文件
+          gradle wrapper --gradle-version 9.2.1
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -29,5 +30,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Kernel-Manager-Build
-          # 确保这里的路径和你生成的 APK 名字一致
           path: app/build/outputs/apk/debug/com.nexus.kernel.manager.apk
