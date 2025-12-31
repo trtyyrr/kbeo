@@ -1,19 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
 android {
-    // ...
+    namespace 'com.nexus.kernel.manager'
+    compileSdk 34
+
     defaultConfig {
-        // ...
+        applicationId "com.nexus.kernel.manager"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
-                abiFilters "arm64-v8a" // 一加平板 Pro 专用
+                abiFilters "arm64-v8a"
             }
         }
     }
 
+    // C++ 编译配置
     externalNativeBuild {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
             version '3.22.1'
         }
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "com.nexus.kernel.manager.apk"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.github.topjohnwu.libsu:core:5.2.2'
 }
