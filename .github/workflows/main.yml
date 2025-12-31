@@ -19,12 +19,12 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Stealth Package & Repair Gradle
+            - name: Stealth Package & Repair Gradle
         run: |
-          # 1. 自动生成缺失的 Gradle Wrapper 文件 (解决报错的关键)
-          gradle wrapper --gradle-version 8.2
+          # 1. 自动生成符合要求的 8.9 版本 Gradle Wrapper
+          gradle wrapper --gradle-version 8.9
           
-          # 2. 生成基于日期的包名 (例如 com.nexus.sys.d1231)
+          # 2. 生成基于日期的包名
           DATE_STR=$(date +%m%d)
           NEW_PKG="com.nexus.sys.d${DATE_STR}"
           echo "NEW_PACKAGE=$NEW_PKG" >> $GITHUB_ENV
