@@ -19,25 +19,33 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Fix Multi-Layer Repositories & Package
+      - name: Fix Dependencies & Package
         run: |
           # 1. 强制回归 8.9 版本
           gradle wrapper --gradle-version 8.9
 
-          # 2. 核心修复：处理 settings.gradle 的限制
-          # 我们直接把 preference 模式从 PREFER_SETTINGS 改为 PREFER_PROJECT，赋予 build.gradle 仓库控制权
+          # 2. 彻底禁用 settings.gradle 对仓库的控制权，防止冲突
           if [ -f "settings.gradle" ]; then
-            sed -i 's/FAIL_ON_PROJECT_REPOS/PREFER_PROJECT/g' settings.gradle
+            echo "include ':app'" > settings.gradle
           fi
 
-          # 3. 注入仓库源到根 build.gradle (这次带上插件地址)
+          # 3. 核心修复：注入包含 JitPack 的仓库配置
           cat > build.gradle <<EOF
           buildscript {
-              repositories { google(); mavenCentral(); gradlePluginPortal() }
+              repositories { 
+                  google()
+                  mavenCentral()
+                  maven { url 'https://jitpack.io' }
+                  gradlePluginPortal() 
+              }
               dependencies { classpath 'com.android.tools.build:gradle:8.5.0' }
           }
           allprojects {
-              repositories { google(); mavenCentral(); gradlePluginPortal() }
+              repositories { 
+                  google()
+                  mavenCentral()
+                  maven { url 'https://jitpack.io' }
+              }
           }
           EOF
 
@@ -49,7 +57,7 @@ jobs:
           # 5. 全局替换包名
           find . -type f \( -name "*.java" -o -name "*.gradle" -o -name "*.xml" -o -name "*.cpp" \) -exec sed -i "s/com.nexus.kernel.manager/$NEW_PKG/g" {} +
           
-          # 6. 物理移动目录以匹配新包名
+          # 6. 物理移动目录
           OLD_PATH="app/src/main/java/com/nexus/kernel/manager"
           NEW_PATH="app/src/main/java/com/nexus/sys/d${DATE_STR}"
           mkdir -p $NEW_PATH
@@ -57,7 +65,7 @@ jobs:
             mv $OLD_PATH/* $NEW_PATH/
           fi
           
-          # 7. 下载 MagiskBoot 内核修补引擎
+          # 7. 下载 MagiskBoot 引擎
           mkdir -p app/src/main/assets/
           curl -L https://raw.githubusercontent.com/topjohnwu/magisk-files/master/magiskboot -o app/src/main/assets/lib_patch_engine.so
 
