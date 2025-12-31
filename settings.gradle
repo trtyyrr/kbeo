@@ -10,9 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' } // 必须有这一行，libsu 才能下载
+        maven { url 'https://jitpack.io' }
     }
 }
-
 rootProject.name = "NexusKernelManager"
 include ':app'
