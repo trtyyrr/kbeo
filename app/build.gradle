@@ -1,3 +1,4 @@
+// 路径: /app/build.gradle
 plugins {
     id 'com.android.application'
 }
@@ -12,9 +13,12 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        
+        // 定义应用名称
+        resValue "string", "app_name", "Nexus Manager"
     }
 
-    // 自动重命名 APK 为 com.nexus.kernel.manager.apk
+    // 自动重命名输出文件
     applicationVariants.all { variant ->
         variant.outputs.all {
             outputFileName = "com.nexus.kernel.manager.apk"
@@ -25,11 +29,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    buildFeatures {
+        viewBinding true // 开启 ViewBinding 方便后续写 KSU 风格的列表
+    }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    // Root 权限核心库
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    // Root 核心支持库
     implementation 'com.github.topjohnwu.libsu:core:5.2.2'
 }
