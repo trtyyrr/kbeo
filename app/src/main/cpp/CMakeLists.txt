@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.22.1)
 project("nexus-native-lib")
 
-# 创建库文件
 add_library(nexus-native-lib SHARED native-lib.cpp)
 
-# 链接安卓系统日志库
+# 【关键修改】：加入隐藏符号表的标志
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fdata-sections -ffunction-sections -Wl,--gc-sections")
+
 find_library(log-lib log)
 target_link_libraries(nexus-native-lib ${log-lib})
