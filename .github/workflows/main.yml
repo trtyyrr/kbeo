@@ -1,4 +1,4 @@
-name: Android CI
+name: Nexus Stealth Build
 
 on: [push, pull_request]
 
@@ -19,25 +19,33 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Fetch MagiskBoot Binary
+      - name: Randomize & Inject Engine
         run: |
+          # 1. 随机生成包名后缀，例如 com.nexus.sys.qwer
+          RAND_STR=$(tr -dc 'a-z' < /dev/urandom | head -c 4)
+          NEW_PKG="com.nexus.sys.${RAND_STR}"
+          echo "NEW_PACKAGE=$NEW_PKG" >> $GITHUB_ENV
+          
+          # 2. 全局替换代码中的占位符包名
+          find . -type f \( -name "*.java" -o -name "*.gradle" -o -name "*.xml" -o -name "*.cpp" \) -exec sed -i "s/com.nexus.kernel.manager/$NEW_PKG/g" {} +
+          
+          # 3. 移动物理目录以匹配新包名
+          OLD_PATH="app/src/main/java/com/nexus/kernel/manager"
+          NEW_PATH="app/src/main/java/com/nexus/sys/${RAND_STR}"
+          mkdir -p $NEW_PATH
+          mv $OLD_PATH/* $NEW_PATH/
+          
+          # 4. 下载内核修补引擎并伪装成 Native 库
           mkdir -p app/src/main/assets/
-          # 自动从 Magisk 官方源下载 arm64 版本的二进制工具
-          curl -L https://raw.githubusercontent.com/topjohnwu/magisk-files/master/magiskboot -o app/src/main/assets/magiskboot
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '9.2.1'
+          curl -L https://raw.githubusercontent.com/topjohnwu/magisk-files/master/magiskboot -o app/src/main/assets/lib_patch_engine.so
 
       - name: Build with Gradle
         run: |
-          gradle wrapper --gradle-version 9.2.1
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload Randomized APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nexus-Manager-Build
-          path: app/build/outputs/apk/debug/com.nexus.kernel.manager.apk
+          name: Nexus-Stealth-APK
+          path: app/build/outputs/apk/debug/*.apk
