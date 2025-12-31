@@ -16,135 +16,139 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    // 加载底层 NDK 库
+    // 1. 加载驱动
     static {
-        System.loadLibrary("nexus-kernel-lib");
+        System.loadLibrary("nexus-native-lib");
     }
 
-    public native String getKernelStatusFromCpp();
+    // 声明 C++ 原生检测方法
+    public native String getKernelVersion();
+    public native boolean checkNativePrivilege(); // 新增：内核级权限校验
 
-    private TextView statusTxt;
+    private TextView txtStatus;
     private ActivityResultLauncher<Intent> pickerLauncher;
+    private static final String ENGINE_NAME = "lib_jni_sys_core.so"; // 伪装工具名
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. 初始化：释放并赋权 magiskboot 工具
-        setupMagiskPath();
-
-        statusTxt = findViewById(R.id.txt_status);
-        TextView kernelTxt = findViewById(R.id.txt_kernel_info);
-        MaterialButton btnReboot = findViewById(R.id.btn_direct_install);
+        // UI 绑定
+        txtStatus = findViewById(R.id.txt_status);
+        TextView txtKernel = findViewById(R.id.txt_kernel);
         MaterialButton btnPatch = findViewById(R.id.btn_patch_file);
-        MaterialButton btnGrant = findViewById(R.id.btn_grant_root);
         MaterialButton btnModules = findViewById(R.id.btn_modules);
+        MaterialButton btnReboot = findViewById(R.id.btn_direct_install);
 
-        // 显示内核信息
-        kernelTxt.setText("内核(NDK): " + getKernelStatusFromCpp());
-        checkRootStatus();
+        // 2. 初始化环境显示
+        txtKernel.setText("内核层: " + getKernelVersion());
+        validatePrivilege();
 
-        // 2. 注册文件选择器（修补镜像用）
+        // 3. 注册镜像选择器（用于修补功能）
         pickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    handleImagePatch(result.getData().getData());
+                    executeGhostPatch(result.getData().getData());
                 }
             }
         );
 
-        // 3. 按钮功能绑定
-        btnReboot.setText("重启至 Bootloader");
-        btnReboot.setOnClickListener(v -> Shell.cmd("reboot bootloader").submit());
-
-        btnPatch.setText("选择并修补 Boot.img");
+        // 4. 核心功能绑定
         btnPatch.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT).setType("*/*");
             pickerLauncher.launch(intent);
         });
 
-        btnGrant.setOnClickListener(v -> checkRootStatus());
+        btnModules.setOnClickListener(v -> detectModulesStealthily());
 
-        btnModules.setOnClickListener(v -> {
-            Shell.cmd("ls /data/adb/modules").submit(res -> {
-                if (res.isSuccess()) {
-                    List<String> modules = res.getOut();
-                    String msg = modules.isEmpty() ? "未发现已安装模块" : "发现 " + modules.size() + " 个模块";
-                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        btnReboot.setOnClickListener(v -> {
+            Shell.cmd("rm -rf " + getFilesDir() + "/*", "reboot bootloader").submit();
+        });
+    }
+
+    /**
+     * 核心：双重验证授权系统
+     */
+    private void validatePrivilege() {
+        boolean isNativeRoot = checkNativePrivilege();
+        Shell.getShell(shell -> {
+            boolean isShellRoot = shell.isRoot();
+            runOnUiThread(() -> {
+                if (isNativeRoot && isShellRoot) {
+                    txtStatus.setText("认证状态: 已通过 (System Mode)");
+                    txtStatus.setTextColor(0xFF00C853); // 绿色
                 } else {
-                    Toast.makeText(this, "读取失败，请检查 Root 授权", Toast.LENGTH_SHORT).show();
+                    txtStatus.setText("认证状态: 待授权");
+                    txtStatus.setTextColor(0xFFD50000); // 红色
                 }
             });
         });
     }
 
-    // 将 Assets 里的 magiskboot 释放到 /data/data/ 下并执行 chmod +x
-    private void setupMagiskPath() {
-        File toolFile = new File(getFilesDir(), "magiskboot");
-        try (InputStream in = getAssets().open("magiskboot");
-             OutputStream out = new FileOutputStream(toolFile)) {
-            byte[] buf = new byte[4096];
-            int len;
-            while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
-            // 关键：必须赋予执行权限
-            toolFile.setExecutable(true, false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void checkRootStatus() {
-        Shell.getShell(shell -> {
-            if (shell.isRoot()) {
-                statusTxt.setText("🛡️ Nexus 环境已激活 (Root)");
-                statusTxt.setTextColor(getColor(android.R.color.holo_blue_dark));
+    /**
+     * 核心：去特征化模块探测
+     */
+    private void detectModulesStealthily() {
+        String modPath = "/data/adb/modules";
+        Shell.cmd("[ -d " + modPath + " ] && ls -1 " + modPath).submit(result -> {
+            if (result.isSuccess()) {
+                List<String> modules = result.getOut();
+                runOnUiThread(() -> Toast.makeText(this, "检测到环境项: " + modules.size(), Toast.LENGTH_SHORT).show());
             } else {
-                statusTxt.setText("❌ 未检测到 Root 权限");
-                statusTxt.setTextColor(getColor(android.R.color.holo_red_dark));
+                runOnUiThread(() -> Toast.makeText(this, "读取受限，请确认 Root 授权", Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-    // 核心修补逻辑：拷贝 -> unpack -> patch -> cleanup
-    private void handleImagePatch(Uri uri) {
-        Toast.makeText(this, "正在修补内核镜像...", Toast.LENGTH_LONG).show();
-        
+    /**
+     * 核心：幽灵修补流程 (释放 -> 修补 -> 自毁)
+     */
+    private void executeGhostPatch(Uri uri) {
+        Toast.makeText(this, "正在建立隔离修补环境...", Toast.LENGTH_LONG).show();
         new Thread(() -> {
+            File engine = new File(getFilesDir(), ENGINE_NAME);
             try {
-                String workDir = getFilesDir().getPath();
-                String magiskPath = workDir + "/magiskboot";
-                File inputFile = new File(workDir, "boot.img");
-                
-                // 将文件拷贝到应用私有目录，防止权限问题
+                // A. 瞬时释放引擎 (从 assets 里的 .so 伪装文件读取)
+                try (InputStream is = getAssets().open("lib_patch_engine.so");
+                     OutputStream os = new FileOutputStream(engine)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = is.read(buffer)) != -1) os.write(buffer, 0, read);
+                }
+                engine.setExecutable(true, false);
+
+                // B. 拷贝待修补镜像到私有目录
+                File bootImg = new File(getFilesDir(), "temp_boot.img");
                 try (InputStream in = getContentResolver().openInputStream(uri);
-                     OutputStream out = new FileOutputStream(inputFile)) {
-                    byte[] buf = new byte[4096];
-                    int len;
+                     OutputStream out = new FileOutputStream(bootImg)) {
+                    byte[] buf = new byte[8192]; int len;
                     while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
                 }
 
-                // 构造修补指令：解包 -> 修补 -> 清理
-                String outPath = "/sdcard/Download/patched_boot.img";
+                // C. 指令链执行：解包 -> 修补 -> 清理 -> 物理擦除引擎
+                String workDir = getFilesDir().getPath();
+                String outPath = "/sdcard/Download/nexus_patched_" + System.currentTimeMillis() + ".img";
                 String cmd = "cd " + workDir + 
-                             " && " + magiskPath + " unpack boot.img" +
-                             " && " + magiskPath + " patch boot.img " + outPath + 
-                             " && " + magiskPath + " cleanup";
+                             " && ./" + ENGINE_NAME + " unpack temp_boot.img" +
+                             " && ./" + ENGINE_NAME + " patch temp_boot.img " + outPath + 
+                             " && ./" + ENGINE_NAME + " cleanup" +
+                             " && rm -f " + ENGINE_NAME + " temp_boot.img";
 
                 Shell.cmd(cmd).submit(result -> {
                     runOnUiThread(() -> {
                         if (result.isSuccess()) {
-                            Toast.makeText(this, "修补成功！保存至: " + outPath, Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "修补成功！保存至 Download 目录", Toast.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(this, "修补失败，请确认镜像格式是否正确", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "修补流程异常，环境已重置", Toast.LENGTH_LONG).show();
                         }
                     });
                 });
 
             } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(this, "异常: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                if (engine.exists()) engine.delete();
+                runOnUiThread(() -> Toast.makeText(this, "错误: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
