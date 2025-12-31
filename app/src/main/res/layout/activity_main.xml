@@ -2,10 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:gravity="center"
-    android:orientation="vertical">
+    android:padding="16dp">
+
     <TextView
+        android:id="@+id/txt_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Nexus Kernel Manager Ready" />
+        android:text="等待 Root 检查..."
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/btn_patch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="开始内核修补" />
+
 </LinearLayout>
