@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    // 这里的 namespace 会被 GitHub Action 脚本动态修改
     namespace 'com.nexus.kernel.manager'
     compileSdk 34
 
@@ -13,15 +14,24 @@ android {
         versionCode 1
         versionName "1.0"
 
-        // 指定只编译 64 位架构，适配一加平板 Pro
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // 专门针对一加平板 Pro 的 64 位架构优化
         externalNativeBuild {
             cmake {
                 abiFilters "arm64-v8a"
+                cppFlags "-Os -fvisibility=hidden" // 隐藏 JNI 符号表，增加反编译难度
             }
         }
     }
 
-    // 关联 C++ 编译脚本
+    buildTypes {
+        release {
+            minifyEnabled true // 开启混淆
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
     externalNativeBuild {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
@@ -29,19 +39,17 @@ android {
         }
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-        }
-    }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    // 引入 Root 核心库
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // libsu 是执行 Root 指令的核心，必须包含
     implementation 'com.github.topjohnwu.libsu:core:5.2.2'
 }
