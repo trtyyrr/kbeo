@@ -1,6 +1,11 @@
-// 根目录脚本，负责定义全局插件版本
-plugins {
-    // 这里必须带版本号，作为整个项目的基准
-    id 'com.android.application' version '8.2.2' apply false
-    id 'com.android.library' version '8.2.2' apply false
+android {
+    namespace 'com.nexus.kernel.manager'
+    compileSdk 34
+    
+    defaultConfig {
+        applicationId "com.nexus.kernel.manager"
+        minSdk 26
+        targetSdk 34
+        // ... 其他保持不变
+    }
 }
