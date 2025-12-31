@@ -14,11 +14,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 新增：确保 NDK 环境就绪（虽然自带，但显式声明更稳）
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r25c # 适配 AGP 8.7.3 的稳定版本
+          ndk-version: r25c
+
+      - name: Fetch MagiskBoot Binary
+        run: |
+          mkdir -p app/src/main/assets/
+          # 自动从 Magisk 官方源下载 arm64 版本的二进制工具
+          curl -L https://raw.githubusercontent.com/topjohnwu/magisk-files/master/magiskboot -o app/src/main/assets/magiskboot
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -27,17 +32,12 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          # 1. 补全 wrapper 文件
           gradle wrapper --gradle-version 9.2.1
           chmod +x gradlew
-          
-          # 2. 核心编译命令
-          # assembleDebug 会自动触发 CMake 编译 C++ 代码并打包进 APK
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nexus-Manager-CPP-Build
-          # 路径保持不变，Gradle 会自动把 .so 塞进这个 APK
+          name: Nexus-Manager-Build
           path: app/build/outputs/apk/debug/com.nexus.kernel.manager.apk
