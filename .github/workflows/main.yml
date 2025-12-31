@@ -19,23 +19,26 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Randomize & Inject Engine
+      - name: Stealth Package & Repair Gradle
         run: |
-          # 1. 随机生成包名后缀，例如 com.nexus.sys.qwer
-          RAND_STR=$(tr -dc 'a-z' < /dev/urandom | head -c 4)
-          NEW_PKG="com.nexus.sys.${RAND_STR}"
+          # 1. 自动生成缺失的 Gradle Wrapper 文件 (解决报错的关键)
+          gradle wrapper --gradle-version 8.2
+          
+          # 2. 生成基于日期的包名 (例如 com.nexus.sys.d1231)
+          DATE_STR=$(date +%m%d)
+          NEW_PKG="com.nexus.sys.d${DATE_STR}"
           echo "NEW_PACKAGE=$NEW_PKG" >> $GITHUB_ENV
           
-          # 2. 全局替换代码中的占位符包名
+          # 3. 全局替换代码中的包名
           find . -type f \( -name "*.java" -o -name "*.gradle" -o -name "*.xml" -o -name "*.cpp" \) -exec sed -i "s/com.nexus.kernel.manager/$NEW_PKG/g" {} +
           
-          # 3. 移动物理目录以匹配新包名
+          # 4. 移动 Java 目录以匹配新包名
           OLD_PATH="app/src/main/java/com/nexus/kernel/manager"
-          NEW_PATH="app/src/main/java/com/nexus/sys/${RAND_STR}"
+          NEW_PATH="app/src/main/java/com/nexus/sys/d${DATE_STR}"
           mkdir -p $NEW_PATH
-          mv $OLD_PATH/* $NEW_PATH/
+          if [ -d "$OLD_PATH" ]; then mv $OLD_PATH/* $NEW_PATH/; fi
           
-          # 4. 下载内核修补引擎并伪装成 Native 库
+          # 5. 下载修补引擎
           mkdir -p app/src/main/assets/
           curl -L https://raw.githubusercontent.com/topjohnwu/magisk-files/master/magiskboot -o app/src/main/assets/lib_patch_engine.so
 
@@ -44,8 +47,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload Randomized APK
+      - name: Upload Stealth APK
         uses: actions/upload-artifact@v4
         with:
-          name: Nexus-Stealth-APK
+          name: Nexus-Stealth-APK-${{ env.NEW_PACKAGE }}
           path: app/build/outputs/apk/debug/*.apk
